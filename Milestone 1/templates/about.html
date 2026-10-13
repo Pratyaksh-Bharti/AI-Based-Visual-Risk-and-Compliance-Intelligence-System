@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+
+{% block title %}About Us | Digital Twin AI{% endblock %}
+
+{% block content %}
+
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, #172554, #2563eb, #0f766e);
+        color: white;
+        padding: 75px 20px;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 45px;
+    }
+
+    .about-hero h1 {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+
+    .about-hero p {
+        max-width: 800px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #e0e7ff;
+    }
+
+    .section-title {
+        font-weight: 750;
+        color: #172554;
+        margin-bottom: 15px;
+    }
+
+    .section-description {
+        color: #64748b;
+        max-width: 800px;
+        line-height: 1.8;
+    }
+
+    .about-card {
+        height: 100%;
+        padding: 28px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .about-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .icon-box {
+        width: 55px;
+        height: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+    .about-card h5 {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+    }
+
+    .about-card p {
+        color: #64748b;
+        line-height: 1.7;
+        margin-bottom: 0;
+    }
+
+    .workflow-section {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 40px 25px;
+    }
+
+    .workflow-step {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .step-number {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        background: #2563eb;
+        color: white;
+        font-weight: 700;
+        border-radius: 50%;
+    }
+
+    .workflow-step h6 {
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .workflow-step p {
+        font-size: 0.95rem;
+        color: #64748b;
+    }
+
+    .mission-box {
+        padding: 35px;
+        background: linear-gradient(135deg, #eff6ff, #ecfeff);
+        border-radius: 18px;
+        border-left: 5px solid #2563eb;
+    }
+
+    .mission-box h3 {
+        font-weight: 750;
+        color: #172554;
+    }
+
+    .mission-box p {
+        color: #475569;
+        line-height: 1.9;
+        margin-bottom: 0;
+    }
+
+    .tech-badge {
+        display: inline-block;
+        padding: 9px 15px;
+        margin: 5px;
+        border: 1px solid #dbeafe;
+        border-radius: 30px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .about-footer {
+        text-align: center;
+        padding: 40px 20px;
+        background: #172554;
+        color: white;
+        border-radius: 18px;
+    }
+
+    .about-footer h3 {
+        font-weight: 750;
+        margin-bottom: 15px;
+    }
+
+    .about-footer p {
+        color: #cbd5e1;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.8;
+    }
+
+    @media (max-width: 576px) {
+        .about-hero {
+            padding: 50px 20px;
+        }
+
+        .mission-box {
+            padding: 25px;
+        }
+
+        .about-card {
+            padding: 23px;
+        }
+    }
+</style>
+
+<div class="container py-4">
+
+```
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="mb-3">
+        <i class="fas fa-brain fa-3x"></i>
+    </div>
+    <h1>About Digital Twin AI</h1>
+    <p>
+        Your personal intelligence platform for smarter decisions.
+        Track your finances, academic progress, fitness activities,
+        and personal goals in one place while exploring how today's
+        decisions may influence tomorrow's outcomes.
+    </p>
+</section>
+
+<!-- Introduction -->
+<section class="mb-5">
+    <h2 class="section-title">What Is Digital Twin AI?</h2>
+    <p class="section-description">
+        Digital Twin AI is an AI-powered personal decision-support
+        platform designed to help individuals understand their habits,
+        monitor their progress, and make informed decisions. By combining
+        personal data, data visualization, machine learning, and
+        predictive analytics, the platform transforms everyday records
+        into meaningful insights.
+    </p>
+    <p class="section-description">
+        From tracking monthly expenses to monitoring study hours and
+        fitness routines, Digital Twin AI brings multiple aspects of
+        personal development together in a unified dashboard.
+    </p>
+</section>
+
+<!-- Core Features -->
+<section class="mb-5">
+    <div class="text-center mb-4">
+        <h2 class="section-title">What Can You Do?</h2>
+        <p class="section-description mx-auto">
+            Explore the tools designed to help you understand your
+            progress and plan your next steps.
+        </p>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h5>Personal Dashboard</h5>
+                <p>
+                    View your key metrics, recent activities, goal
+                    progress, and personal insights through one
+                    centralized dashboard.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <h5>Financial Intelligence</h5>
+                <p>
+                    Record income and expenses, analyze spending habits,
+                    monitor savings, and explore potential future
+                    financial trends.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h5>Study Intelligence</h5>
+                <p>
+                    Track study sessions, measure productivity, analyze
+                    learning patterns, and explore academic performance
+                    projections.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <h5>Fitness Monitoring</h5>
+                <p>
+                    Log physical activities, monitor exercise duration,
+                    track weekly targets, and understand your activity
+                    patterns over time.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h5>Predictive Analytics</h5>
+                <p>
+                    Use historical records and statistical models to
+                    estimate future savings, study outcomes, and
+                    fitness activity trends.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h5>Goal Management</h5>
+                <p>
+                    Define personal objectives, monitor completion
+                    progress, and stay aware of the milestones
+                    you are working toward.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <h5>Future Simulation</h5>
+                <p>
+                    Explore hypothetical scenarios, such as saving more,
+                    studying additional hours, or exercising regularly,
+                    to compare potential outcomes.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h5>AI Assistant</h5>
+                <p>
+                    Get conversational guidance and personalized
+                    suggestions based on available information and
+                    supported AI functionality.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="about-card">
+                <div class="icon-box">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h5>Administration</h5>
+                <p>
+                    Provide authorized administrators with tools to
+                    manage users and review platform-level activity
+                    and usage statistics.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="workflow-section mb-5">
+    <div class="text-center mb-4">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-description mx-auto">
+            Turn everyday information into useful insights through
+            a simple, data-driven process.
+        </p>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-3">
+            <div class="workflow-step">
+                <div class="step-number">1</div>
+                <h6>Record</h6>
+                <p>
+                    Enter your financial transactions, study sessions,
+                    fitness activities, and personal goals.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="workflow-step">
+                <div class="step-number">2</div>
+                <h6>Analyze</h6>
+                <p>
+                    Organize your records into summaries, charts,
+                    trends, and measurable performance indicators.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="workflow-step">
+                <div class="step-number">3</div>
+                <h6>Predict</h6>
+                <p>
+                    Apply available statistical and machine learning
+                    models to estimate possible future outcomes.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="workflow-step">
+                <div class="step-number">4</div>
+                <h6>Improve</h6>
+                <p>
+                    Use the insights to evaluate options, refine
+                    your goals, and make more informed decisions.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Digital Twin Concept -->
+<section class="mb-5">
+    <div class="mission-box">
+        <h3 class="mb-3">
+            <i class="fas fa-project-diagram me-2"></i>
+            The Digital Twin Concept
+        </h3>
+        <p>
+            A digital twin is a digital representation of a real-world
+            system. In Digital Twin AI, this idea is applied to personal
+            development by organizing a user's recorded activities,
+            habits, goals, and performance indicators into a unified
+            digital profile. As more information becomes available,
+            the platform can help reveal trends and compare hypothetical
+            scenarios. Its predictions are estimates based on available
+            data, not guarantees of future results.
+        </p>
+    </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="text-center mb-5">
+    <h2 class="section-title">Powered by Technology</h2>
+    <p class="section-description mx-auto mb-4">
+        The platform combines web development, data management,
+        machine learning, and AI technologies.
+    </p>
+
+    <div>
+        <span class="tech-badge">Python</span>
+        <span class="tech-badge">Flask</span>
+        <span class="tech-badge">Flask-SQLAlchemy</span>
+        <span class="tech-badge">SQLite</span>
+        <span class="tech-badge">PostgreSQL</span>
+        <span class="tech-badge">scikit-learn</span>
+        <span class="tech-badge">NumPy</span>
+        <span class="tech-badge">Google Gemini AI</span>
+        <span class="tech-badge">HTML5</span>
+        <span class="tech-badge">CSS3</span>
+        <span class="tech-badge">Bootstrap 5</span>
+        <span class="tech-badge">Chart.js</span>
+        <span class="tech-badge">Jinja2</span>
+    </div>
+</section>
+
+<!-- Mission -->
+<section class="about-footer mb-4">
+    <i class="fas fa-lightbulb fa-2x mb-3"></i>
+    <h3>Our Mission</h3>
+    <p>
+        To make personal data more meaningful by helping people
+        understand their current habits, learn from their past
+        activities, and explore better possibilities for the future.
+        Digital Twin AI aims to bring awareness, analytics, and
+        decision support together in one accessible platform.
+    </p>
+</section>
+
+<div class="text-center text-muted small py-3">
+    Digital Twin AI &mdash; Understand Your Present. Explore Your Future.
+</div>
+```
+
+</div>
+{% endblock %}
