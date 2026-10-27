@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .dash-wrapper { background: #f7fafc; border-radius: 20px; padding: 1rem; }
+    .metric-card { border-radius: 16px; padding: 1rem 1.2rem; color: white; transition: transform 0.2s; height: 100%; }
+    .metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+    .metric-card h5 { font-weight: 400; opacity: 0.9; font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .metric-card h2 { font-weight: 700; margin: 0.1rem 0; font-size: 1.7rem; }
+    .metric-card small { opacity: 0.85; font-size: 0.75rem; }
+    .stat-icon { font-size: 1.8rem; opacity: 0.7; }
+    .card-custom { border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header-custom { background: transparent; font-weight: 600; padding: 0.8rem 1.2rem; border-bottom: 1px solid #edf2f7; font-size: 0.95rem; }
+    .chart-box { position: relative; height: 240px; }
+    .life-score { font-size: 2.6rem; font-weight: 700; color: #667eea; }
+    .insight-value { font-size: 1.5rem; font-weight: 700; }
+    .btn-primary-custom { background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 50px; padding: 0.4rem 1.2rem; font-weight: 600; color: white; }
+    .btn-primary-custom:hover { color: white; box-shadow: 0 6px 18px rgba(102,126,234,0.4); }
+    .form-control { border-radius: 10px; }
+    @media (max-width: 768px) { .metric-card h2 { font-size: 1.35rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ---------- Safe values built from what user_dashboard() passes ---------- #}
+{% set m = metrics|default({}) %}
+{% set g = gpa|default({}) %}
+{% set goals_all = user.goals|default([]) %}
+{% set goals_total = goals_all|length %}
+{% set goals_done = goals_all|selectattr('achieved')|list|length %}
+{% set life_v = life_score|default(0)|float %}
+{% set life_pct = [[life_v, 0]|max, 100]|min %}
+{% set gp = goal_progress|default([]) %}
+{% set sf = savings_forecast|default([]) %}
+{% set gf = gpa_forecast|default([]) %}
+{% set uname = user.username if user is defined else 'User' %}
+
+<div class="dash-wrapper">
+
+    <div class="mb-4">
+        <h3 class="fw-bold mb-0"><i class="fas fa-gauge-high text-primary me-2"></i>Welcome back, {{ uname }} 👋</h3>
+        <small class="text-muted">Your personal digital twin at a glance</small>
+    </div>
+
+    <!-- ===== Metric cards ===== -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #48bb78, #38a169);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Savings</h5>
+                        <h2>₹{{ '{:,.0f}'.format(user.savings|default(0)|float) }}</h2>
+                        <small>Savings rate {{ '%.1f'|format(m.rate|default(0)|float) }}%</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-piggy-bank"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Predicted GPA</h5>
+                        <h2>{{ '%.2f'|format(g.gpa|default(0)|float) }}</h2>
+                        <small>Efficiency {{ g.efficiency|default(0) }}%</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #f6ad55, #dd6b20);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Fitness (min)</h5>
+                        <h2>{{ total_fitness|default(0)|float|round|int }}</h2>
+                        <small>Streak {{ fitness_streak|default(0) }} day(s)</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-dumbbell"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #ed64a6, #d53f8c);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Goals</h5>
+                        <h2>{{ goals_done }}/{{ goals_total }}</h2>
+                        <small>Achieved</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <!-- ===== Profile / Life Score ===== -->
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-id-card text-primary me-1"></i> Profile</div>
+                <div class="card-body text-center">
+                    <i class="fas fa-circle-user fa-4x text-secondary mb-2"></i>
+                    <h5 class="mb-0">{{ uname }}</h5>
+                    <small class="text-muted">{{ user.email|default('') }}</small>
+                    <hr>
+                    <div class="row g-2 small text-muted mb-2">
+                        <div class="col-6">Study streak<br><strong class="text-dark">{{ study_streak|default(0) }} day(s)</strong></div>
+                        <div class="col-6">Study hours<br><strong class="text-dark">{{ '%.1f'|format(total_study_hours|default(0)|float) }}</strong></div>
+                    </div>
+                    <div class="text-muted small">Life Score</div>
+                    <div class="life-score">{{ life_pct|round|int }}%</div>
+                    <div class="progress" style="height:10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ life_pct|round|int }}%; background:#667eea;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Goals ===== -->
+        <div class="col-lg-8">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-flag-checkered text-success me-1"></i> Goals</div>
+                <div class="card-body">
+                    {% if gp %}
+                        {% for goal in gp %}
+                            {% set p = goal.progress|default(0)|float %}
+                            {% set p = [[p, 0]|max, 100]|min %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ goal.description|default('Untitled goal') }}</span>
+                                    <span class="text-muted small">{{ p|round|int }}%</span>
+                                </div>
+                                <div class="progress" style="height:8px;">
+                                    <div class="progress-bar {{ 'bg-success' if p >= 100 else 'bg-info' }}" style="width: {{ p|round|int }}%"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No active goals with a target date yet.</p>
+                    {% endif %}
+
+                    <hr>
+                    <form method="POST" action="{{ url_for('add_goal') }}" class="row g-2 align-items-end">
+                        {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold mb-1">New goal</label>
+                            <input type="text" name="description" class="form-control" placeholder="e.g. Save ₹50,000" maxlength="200" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold mb-1">Target date</label>
+                            <input type="date" name="target_date" class="form-control">
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button type="submit" class="btn btn-primary-custom"><i class="fas fa-plus"></i> Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Charts ===== -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-chart-column text-primary me-1"></i> Income vs Expenses</div>
+                <div class="card-body">
+                    <div class="chart-box"><canvas id="financeChart"></canvas></div>
+                    <p id="financeEmpty" class="text-muted text-center small mt-2 mb-0" style="display:none;">No transactions yet.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-book-open text-primary me-1"></i> Study Hours</div>
+                <div class="card-body">
+                    <div class="chart-box"><canvas id="studyChart"></canvas></div>
+                    <p id="studyEmpty" class="text-muted text-center small mt-2 mb-0" style="display:none;">No study sessions yet.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-person-running text-warning me-1"></i> Fitness Minutes</div>
+                <div class="card-body">
+                    <div class="chart-box"><canvas id="fitnessChart"></canvas></div>
+                    <p id="fitnessEmpty" class="text-muted text-center small mt-2 mb-0" style="display:none;">No activity logged yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Predictive insights ===== -->
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-wand-magic-sparkles text-info me-1"></i> Predictive Insights</div>
+                <div class="card-body">
+                    <div class="row text-center g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="text-muted small">Savings in 6 months</div>
+                            <div class="insight-value text-success">₹{{ '{:,.0f}'.format((sf|last if sf else 0)|float) }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">GPA forecast</div>
+                            <div class="insight-value text-primary">{{ '%.2f'|format((gf|last if gf else g.gpa|default(0))|float) }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Fitness next 30 days</div>
+                            <div class="insight-value text-warning">{{ projected_fitness|default(0)|float|round|int }} min</div>
+                        </div>
+                    </div>
+                    {% if g.recommendation is defined and g.recommendation %}
+                        <div class="alert alert-light border small mb-3"><i class="fas fa-lightbulb text-warning me-1"></i>{{ g.recommendation }}</div>
+                    {% endif %}
+                    <div class="chart-box" style="height:200px;"><canvas id="savingsChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-bolt text-primary me-1"></i> Quick Actions</div>
+                <div class="card-body d-grid gap-2">
+                    <a href="{{ url_for('user_financial') }}" class="btn btn-outline-success"><i class="fas fa-coins me-2"></i>Add a transaction</a>
+                    <a href="{{ url_for('user_study') }}" class="btn btn-outline-primary"><i class="fas fa-book me-2"></i>Log a study session</a>
+                    <a href="{{ url_for('user_fitness') }}" class="btn btn-outline-warning"><i class="fas fa-dumbbell me-2"></i>Log an activity</a>
+                    <a href="{{ url_for('user_simulation') }}" class="btn btn-outline-info"><i class="fas fa-flask me-2"></i>Run a simulation</a>
+                    <a href="{{ url_for('user_assistant') }}" class="btn btn-primary-custom"><i class="fas fa-robot me-2"></i>Ask the AI assistant</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.DASH = {
+        months:        {{ months|default([])|tojson }},
+        incomeData:    {{ income_data|default([])|tojson }},
+        expenseData:   {{ expense_data|default([])|tojson }},
+        studyDays:     {{ study_days|default([])|tojson }},
+        studyHours:    {{ study_hours|default([])|tojson }},
+        fitnessDays:   {{ fitness_days|default([])|tojson }},
+        fitnessMins:   {{ fitness_minutes|default([])|tojson }},
+        savingsFc:     {{ sf|tojson }}
+    };
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof Chart === 'undefined' || !window.DASH) { return; }
+        var D = window.DASH;
+        var opts = { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } };
+
+        function draw(canvasId, emptyId, hasData, config) {
+            var el = document.getElementById(canvasId);
+            if (!el) { return; }
+            if (!hasData) {
+                el.style.display = 'none';
+                var msg = emptyId ? document.getElementById(emptyId) : null;
+                if (msg) { msg.style.display = 'block'; }
+                return;
+            }
+            new Chart(el, config);
+        }
+
+        draw('financeChart', 'financeEmpty', D.months.length > 0, {
+            type: 'bar',
+            data: { labels: D.months, datasets: [
+                { label: 'Income', data: D.incomeData, backgroundColor: '#48bb78' },
+                { label: 'Expenses', data: D.expenseData, backgroundColor: '#fc8181' }
+            ]},
+            options: opts
+        });
+
+        draw('studyChart', 'studyEmpty', D.studyDays.length > 0, {
+            type: 'line',
+            data: { labels: D.studyDays, datasets: [{
+                label: 'Hours', data: D.studyHours, borderColor: '#667eea',
+                backgroundColor: 'rgba(102,126,234,.15)', fill: true, tension: .3
+            }]},
+            options: opts
+        });
+
+        draw('fitnessChart', 'fitnessEmpty', D.fitnessDays.length > 0, {
+            type: 'bar',
+            data: { labels: D.fitnessDays, datasets: [{ label: 'Minutes', data: D.fitnessMins, backgroundColor: '#f6ad55' }]},
+            options: opts
+        });
+
+        draw('savingsChart', null, D.savingsFc.length > 0, {
+            type: 'line',
+            data: {
+                labels: D.savingsFc.map(function (_, i) { return 'Month ' + (i + 1); }),
+                datasets: [{ label: 'Projected savings (₹)', data: D.savingsFc, borderColor: '#38a169',
+                             backgroundColor: 'rgba(56,161,105,.12)', fill: true, tension: .3 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+        });
+    });
+</script>
+{% endblock %}
