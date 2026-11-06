@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .study-wrapper { background: #f7fafc; border-radius: 20px; padding: 1rem; }
+    .metric-card { border-radius: 16px; padding: 1rem 1.2rem; color: white; transition: transform 0.2s; height: 100%; }
+    .metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+    .metric-card h5 { font-weight: 400; opacity: 0.9; font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .metric-card h2 { font-weight: 700; margin: 0.1rem 0; font-size: 1.8rem; }
+    .metric-card small { opacity: 0.85; font-size: 0.75rem; }
+    .stat-icon { font-size: 1.8rem; opacity: 0.7; }
+    .card-custom { border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header-custom { background: transparent; font-weight: 600; padding: 0.8rem 1.2rem; border-bottom: 1px solid #edf2f7; font-size: 0.95rem; }
+    .table-custom th { font-weight: 600; color: #4a5568; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #edf2f7; }
+    .table-custom td { font-size: 0.85rem; vertical-align: middle; }
+    .form-control, .form-select { border-radius: 10px; border: 1.5px solid #e2e8f0; transition: border-color 0.2s; }
+    .form-control:focus, .form-select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+    .btn-primary-custom { background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 50px; padding: 0.5rem 1.5rem; font-weight: 600; color: white; transition: all 0.2s; width: 100%; }
+    .btn-primary-custom:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(102,126,234,0.4); color: white; }
+    .chart-box { position: relative; height: 240px; }
+    .log-scroll { max-height: 350px; overflow-y: auto; }
+    .log-scroll::-webkit-scrollbar { width: 4px; }
+    .log-scroll::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+    .action-btn { padding: 0.2rem 0.5rem; font-size: 0.8rem; }
+    .prod-value { font-weight: 700; color: #667eea; }
+    @media (max-width: 768px) { .metric-card h2 { font-size: 1.4rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+{# ---------- Safe values built from what user_study() passes ---------- #}
+{% set g = gpa|default({}) %}
+{% set log_list = logs|default([]) %}
+{% set hours_total = total_hours|default(0)|float %}
+{% set prod_avg_v = avg_productivity|default(0)|float %}
+{% set streak_v = study_streak|default(0) %}
+{% set subject_names = subjects|default([]) %}
+
+<div class="study-wrapper">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold mb-0"><i class="fas fa-book-open text-primary me-2"></i>Study Intelligence</h3>
+        <span class="badge bg-light text-dark">Last updated: <span id="lastUpdated"></span></span>
+    </div>
+
+    <!-- ===== Summary Metrics ===== -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Predicted GPA</h5>
+                        <h2>{{ '%.2f'|format(g.gpa|default(0)|float) }}</h2>
+                        <small>Out of 4.0</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #4299e1, #2b6cb0);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Total Hours</h5>
+                        <h2>{{ '%.1f'|format(hours_total) }}</h2>
+                        <small>All time</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #48bb78, #38a169);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Avg Productivity</h5>
+                        <h2>{{ '%.0f'|format(prod_avg_v) }}%</h2>
+                        <small>{{ 'Excellent' if prod_avg_v >= 80 else ('Good' if prod_avg_v >= 60 else 'Needs focus') }}</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-gauge-high"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="metric-card" style="background: linear-gradient(135deg, #ed64a6, #d53f8c);">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5>Study Streak</h5>
+                        <h2>{{ streak_v }}</h2>
+                        <small>Consecutive day(s)</small>
+                    </div>
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if g.recommendation is defined and g.recommendation %}
+    <div class="alert alert-light border small mb-4">
+        <i class="fas fa-lightbulb text-warning me-1"></i>
+        <strong>Insight:</strong> {{ g.recommendation }}
+        {% if g.efficiency is defined %}<span class="text-muted">(Study efficiency: {{ g.efficiency }}%)</span>{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="row g-3 mb-4">
+        <!-- ===== Log a study session ===== -->
+        <div class="col-lg-4">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-plus-circle text-primary me-1"></i> Log Study Session</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('user_study') }}" id="addStudyForm">
+                        {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Date</label>
+                            <input type="date" name="date" id="add-date" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Hours studied</label>
+                            <input type="number" name="hours" step="any" min="0.1" max="24" class="form-control" placeholder="e.g. 2.5" required
+                                   oninvalid="this.setCustomValidity('Enter hours between 0.1 and 24.')"
+                                   oninput="this.setCustomValidity('')">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Subject</label>
+                            <input type="text" name="subject" class="form-control" list="subjectList" maxlength="100" placeholder="e.g. Mathematics" required>
+                            <datalist id="subjectList">
+                                {% for s in subject_names %}<option value="{{ s }}">{% endfor %}
+                            </datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Productivity: <span id="add-prod-label" class="prod-value">70</span>%</label>
+                            <input type="range" name="productivity" id="add-prod" class="form-range" min="1" max="100" value="70">
+                        </div>
+                        <button type="submit" class="btn btn-primary-custom"><i class="fas fa-save me-1"></i> Log Session</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Daily trend ===== -->
+        <div class="col-lg-8">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-chart-line text-success me-1"></i> Daily Study Hours (last 14 days)</div>
+                <div class="card-body">
+                    <div class="chart-box"><canvas id="dailyChart"></canvas></div>
+                    <p id="dailyEmpty" class="text-muted text-center mt-3 mb-0" style="display:none;">
+                        <i class="fas fa-inbox fa-2x d-block mb-2"></i>No study sessions yet. Log your first one!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-chart-pie text-danger me-1"></i> Hours by Subject</div>
+                <div class="card-body">
+                    <div class="chart-box"><canvas id="subjectChart"></canvas></div>
+                    <p id="subjectEmpty" class="text-muted text-center mt-3 mb-0" style="display:none;">No subject data yet.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom"><i class="fas fa-gauge-high text-warning me-1"></i> Productivity Trend</div>
+                <div class="card-body">
+                    <div class="chart-box"><canvas id="prodChart"></canvas></div>
+                    <p id="prodEmpty" class="text-muted text-center mt-3 mb-0" style="display:none;">No productivity data yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Recent sessions ===== -->
+    <div class="card card-custom">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-list-ul text-primary me-1"></i> Recent Study Sessions</span>
+            <span class="badge bg-light text-dark">{{ log_list|length }} shown</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="log-scroll">
+                <table class="table table-custom table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Subject</th>
+                            <th class="text-end">Hours</th>
+                            <th class="text-center">Productivity</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in log_list %}
+                        {% set d_val = log.date.strftime('%Y-%m-%d') if (log.date is defined and log.date.strftime is defined) else (log.date|default('')|string) %}
+                        {% set d_show = log.date.strftime('%d-%m-%Y') if (log.date is defined and log.date.strftime is defined) else (log.date|default('')|string) %}
+                        {% set prod = log.productivity_score|default(0)|int %}
+                        <tr>
+                            <td>{{ d_show }}</td>
+                            <td>{{ log.subject|default('-') }}</td>
+                            <td class="text-end fw-bold">{{ '%.1f'|format(log.hours|default(0)|float) }}</td>
+                            <td class="text-center">
+                                <span class="badge {{ 'bg-success' if prod >= 80 else ('bg-warning text-dark' if prod >= 60 else 'bg-danger') }}">{{ prod }}%</span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-primary action-btn me-1"
+                                        data-bs-toggle="modal" data-bs-target="#editStudyModal"
+                                        data-id="{{ log.id }}"
+                                        data-date="{{ d_val }}"
+                                        data-hours="{{ log.hours }}"
+                                        data-subject="{{ log.subject|default('') }}"
+                                        data-productivity="{{ prod }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form method="POST" action="{{ url_for('delete_study_log', id=log.id) }}"
+                                      style="display:inline-block;"
+                                      onsubmit="return confirm('Permanently delete this study session?');">
+                                    {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger action-btn"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">No study sessions recorded yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="modal fade" id="editStudyModal" tabindex="-1" aria-labelledby="editStudyLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('edit_study_log') }}" id="editStudyForm">
+                {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+                <input type="hidden" name="id" id="edit-id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editStudyLabel"><i class="fas fa-edit text-primary me-2"></i>Edit Study Session</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Date</label>
+                        <input type="date" name="date" id="edit-date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Hours</label>
+                        <input type="number" name="hours" id="edit-hours" step="any" min="0.1" max="24" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Subject</label>
+                        <input type="text" name="subject" id="edit-subject" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Productivity: <span id="edit-prod-label" class="prod-value">70</span>%</label>
+                        <input type="range" name="productivity" id="edit-prod" class="form-range" min="1" max="100" value="70">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary-custom" style="width:auto;"><i class="fas fa-save me-1"></i> Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.STUDY = {
+        dates:        {{ study_dates|default([])|tojson }},
+        hours:        {{ study_hours|default([])|tojson }},
+        subjects:     {{ subjects|default([])|tojson }},
+        subjectHours: {{ subject_hours|default([])|tojson }},
+        prodDates:    {{ prod_dates|default([])|tojson }},
+        prodAvg:      {{ prod_avg|default([])|tojson }}
+    };
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // ---- Today's date + "last updated" (browser side) ----
+        var now = new Date();
+        var pad = function (n) { return String(n).padStart(2, '0'); };
+        var today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+        var addDate = document.getElementById('add-date');
+        if (addDate && !addDate.value) { addDate.value = today; }
+        var lu = document.getElementById('lastUpdated');
+        if (lu) { lu.textContent = now.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+
+        // ---- Productivity slider labels ----
+        function bindSlider(sliderId, labelId) {
+            var s = document.getElementById(sliderId), l = document.getElementById(labelId);
+            if (!s || !l) { return; }
+            s.addEventListener('input', function () { l.textContent = s.value; });
+        }
+        bindSlider('add-prod', 'add-prod-label');
+        bindSlider('edit-prod', 'edit-prod-label');
+
+        // ---- Fill the edit modal ----
+        var modal = document.getElementById('editStudyModal');
+        if (modal) {
+            modal.addEventListener('show.bs.modal', function (event) {
+                var b = event.relatedTarget;
+                if (!b) { return; }
+                document.getElementById('edit-id').value = b.getAttribute('data-id');
+                document.getElementById('edit-date').value = b.getAttribute('data-date');
+                document.getElementById('edit-hours').value = b.getAttribute('data-hours');
+                document.getElementById('edit-subject').value = b.getAttribute('data-subject');
+                var p = b.getAttribute('data-productivity') || '70';
+                document.getElementById('edit-prod').value = p;
+                document.getElementById('edit-prod-label').textContent = p;
+            });
+        }
+
+        // ---- Hours validation (extra safety) ----
+        ['addStudyForm', 'editStudyForm'].forEach(function (id) {
+            var f = document.getElementById(id);
+            if (!f) { return; }
+            f.addEventListener('submit', function (e) {
+                var h = f.querySelector('input[name="hours"]');
+                var v = h ? parseFloat(h.value) : NaN;
+                if (!(v > 0 && v <= 24)) {
+                    if (h) { h.setCustomValidity('Enter hours between 0.1 and 24.'); h.reportValidity(); }
+                    e.preventDefault();
+                } else if (h) {
+                    h.setCustomValidity('');
+                }
+            });
+        });
+
+        // ---- Charts ----
+        if (typeof Chart === 'undefined' || !window.STUDY) { return; }
+        var S = window.STUDY;
+
+        function draw(canvasId, emptyId, hasData, config) {
+            var el = document.getElementById(canvasId);
+            if (!el) { return; }
+            if (!hasData) {
+                el.style.display = 'none';
+                var msg = document.getElementById(emptyId);
+                if (msg) { msg.style.display = 'block'; }
+                return;
+            }
+            new Chart(el, config);
+        }
+
+        draw('dailyChart', 'dailyEmpty', S.dates.length > 0, {
+            type: 'bar',
+            data: { labels: S.dates, datasets: [{ label: 'Hours', data: S.hours, backgroundColor: '#667eea', borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        draw('subjectChart', 'subjectEmpty', S.subjects.length > 0, {
+            type: 'doughnut',
+            data: {
+                labels: S.subjects,
+                datasets: [{
+                    data: S.subjectHours,
+                    backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#43e97b', '#fa709a', '#fee140'],
+                    borderWidth: 2, borderColor: '#fff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '60%',
+                       plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 10 } } } } }
+        });
+
+        draw('prodChart', 'prodEmpty', S.prodDates.length > 0, {
+            type: 'line',
+            data: { labels: S.prodDates, datasets: [{
+                label: 'Productivity %', data: S.prodAvg, borderColor: '#ed8936',
+                backgroundColor: 'rgba(237,137,54,.15)', fill: true, tension: .3, pointRadius: 3
+            }]},
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                       scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+    });
+</script>
+{% endblock %}
